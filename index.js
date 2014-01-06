@@ -23,18 +23,22 @@ function camelCase(input) {
 }
 
 function createConstructor(className) {
-    var constructor = function constructor(portNumber, hostName, timeoutSeconds) {
+    var constructor = function constructor(portNumber, hostName, clusterName, timeoutSeconds) {
         if (!(this instanceof constructor)) {
             throw new Error(className + ' is constructor.');
         }
 
         var port = portNumber || 9199,
             host = hostName || 'localhost',
+            cluster = clusterName || 'cluster',
             timeoutMillis = (timeoutSeconds || 0) * 1000,
             client = rpc.createClient(port, host, timeoutMillis);
         this.getClient = function () {
             return client;
         };
+        this.getClusterName = function () {
+            return cluster;
+        }
         return this;
     };
 
@@ -54,6 +58,7 @@ function createConstructor(className) {
                 params = toArray(arguments),
                 hasCallback = (typeof params[params.length - 1] === 'function'),
                 callback = hasCallback ? params.pop() : function () {};
+            params.unshift(self.getClusterName());
             assertParams(params);
             client.call(rpcName, params, function call(error, result, msgid) {
                 callback.call(self, error && new Error(util.format('%s %s', error, result || '')),
