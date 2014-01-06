@@ -16,6 +16,12 @@ function toArray(args) {
     return Array.prototype.slice.call(args);
 }
 
+function camelCase(input) {
+    return input.toLowerCase().replace(/_(.)/g, function(match, group1) {
+        return group1.toUpperCase();
+    });
+}
+
 function createConstructor(className) {
     var constructor = function constructor(portNumber, hostName, timeoutSeconds) {
         if (!(this instanceof constructor)) {
@@ -26,7 +32,7 @@ function createConstructor(className) {
             host = hostName || 'localhost',
             timeoutMillis = (timeoutSeconds || 0) * 1000,
             client = rpc.createClient(port, host, timeoutMillis);
-        this.get_client = function get_client() {
+        this.getClient = function () {
             return client;
         };
         return this;
@@ -34,7 +40,8 @@ function createConstructor(className) {
 
     api[className].methods.forEach(function (method) {
         debug(method);
-        var methodName = method.id || method,
+        var rpcName = method.id || method,
+            methodName = camelCase(rpcName),
             assertParams = !isProduct && method.args ? function (params) {
                 debug({ params: params, args: method.args });
                 var schema = method.args,
@@ -43,12 +50,12 @@ function createConstructor(className) {
             } : function () {};
         constructor.prototype[methodName] = function () {
             var self = this,
-                client = self.get_client(),
+                client = self.getClient(),
                 params = toArray(arguments),
                 hasCallback = (typeof params[params.length - 1] === 'function'),
                 callback = hasCallback ? params.pop() : function () {};
             assertParams(params);
-            client.call(methodName, params, function call(error, result, msgid) {
+            client.call(rpcName, params, function call(error, result, msgid) {
                 callback.call(self, error && new Error(util.format('%s %s', error, result || '')),
                         error ? null : result, msgid);
             });
