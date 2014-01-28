@@ -68,6 +68,19 @@ var common = {
                     "additionalItems": false
                 }
             }
+        },
+        {
+            "id": "get_proxy_status",
+            "properties": {
+                "return": { "type": "object" },
+                "args": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 0,
+                    "items": [ ],
+                    "additionalItems": false
+                }
+            }
         }
     ],
     types: [
